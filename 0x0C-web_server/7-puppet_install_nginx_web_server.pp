@@ -1,20 +1,39 @@
-# Puppet manifest to install nginx
+# Puppet manifest to install nginx 
+
+# Install Nginx package
 package { 'nginx':
-  ensure => installed,
+  ensure => 'installed',
 }
 
-file_line { 'aaaaa':
-  ensure => 'present',
-  path   => '/etc/nginx/sites-available/default',
-  after  => 'listen 80 default_server;',
-  line   => 'rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;',
+# Configure Nginx
+file { '/etc/nginx/sites-available/default':
+  ensure  => 'file',
+  content => "
+    server {
+      listen 80;
+      server_name robinsonvictor.tech;
+
+      location / {
+        return 200 'Hello World!';
+      }
+
+      location /redirect_me {
+        return 301 https://www.example.com; # Replace with the actual URL
+      }
+    }
+  ",
 }
 
-file { '/var/www/html/index.html':
-  content => 'Hello World!',
+# Create symbolic link for Nginx configuration
+file { '/etc/nginx/sites-enabled/default':
+  ensure => 'link',
+  target => '/etc/nginx/sites-available/default',
 }
 
+# Restart Nginx service
 service { 'nginx':
-  ensure  => running,
-  require => Package['nginx'],
+  ensure    => 'running',
+  enable    => true,
+  subscribe => File['/etc/nginx/sites-available/default'],
 }
+

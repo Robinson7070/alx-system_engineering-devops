@@ -1,10 +1,29 @@
 #!/usr/bin/env bash
-#Configure your Nginx server to have a custom 404 page that contains the string Ceci n'est pas une page
 
-sudo apt-get -y update
-sudo apt-get -y install nginx
-sudo ufw allow 'Nginx HTTP'
-echo "Ceci n'est pas une page" | sudo tee /usr/share/nginx/html/404.html
-newlines="\\\terror_page 404 /404.html;\n\tlocation = /404.html {\n\t\troot /usr/share/nginx/html;\n\t\tinternal;\n\t}"
-sudo sed -i "27i $newlines" /etc/nginx/sites-available/default
-sudo service nginx restart
+# Install Nginx if not already installed (assuming you have the 1-install_nginx_web_server script)
+bash 1-install_nginx_web_server.sh
+
+# Create a configuration file for the custom 404 page
+echo "server {
+    listen 80;
+    server_name robinsonvictor.tech;
+
+    error_page 404 /not_found;
+
+    location /not_found {
+        return 404 \"Ceci n'est pas une page\";
+    }
+
+    # Additional server configurations if needed
+
+}" | sudo tee /etc/nginx/sites-available/not_found_page_404 > /dev/null
+
+# Create a symbolic link to enable the configuration
+sudo ln -s /etc/nginx/sites-available/not_found_page_404 /etc/nginx/sites-enabled/
+
+# Test Nginx configuration
+sudo nginx -t
+
+# Reload Nginx to apply changes
+sudo service nginx reload
+
